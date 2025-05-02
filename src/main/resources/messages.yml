@@ -1,0 +1,29 @@
+# 禁言
+#{count}禁言玩家总数量
+#{player}目标玩家
+#{reason}禁言原因
+#{time}禁言的剩余时间
+mute:
+  no-muted-players: "§a当前没有禁言中的玩家"
+  muted-list-header: "§6禁言玩家列表 (§e{count}§6):"
+  muted-player-line: "§8- §e{player} §7(禁言原因: §f{reason}§7, 剩余: §f{time}§7)"
+  unmute-hover: "§a点击解禁 {player}" # 光标移动到按钮上时会提示什么？
+  unmute-success: "§a已解除玩家 §e{player} §a的禁言"
+  player-not-found: "§c未找到玩家 §e{player}"
+  mute-success: "§a已禁言玩家 §e{player} §e{time}"
+  already-muted: "§c玩家 §e{player} §c已被禁言，已覆盖原禁言时间。"
+  unmute-auto: "§a你的禁言已自动解除。"
+  unmute-admin: "§a你已被管理员解禁。"
+  unmute-default: "§a你的禁言已解除。"
+
+# 称号
+#{title}相当于config.yml中的Server-Prefix
+#{prefix}称号名
+prefix:
+  list-header: "§6=============={title}================"
+  enable-success: "§a已启用称号: {prefix}"
+  disable-success: "§a已禁用称号！"
+  player-only: "§c该指令只能由玩家使用！"
+
+general:
+  reload-success: "§a所有配置已重载！"

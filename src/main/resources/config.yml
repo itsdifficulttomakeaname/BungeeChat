@@ -1,0 +1,123 @@
+AntiSwear:
+  enable: true
+  #你希望你的玩家在被禁言后多久时间后被解禁?单位是"秒"
+  time: 600
+  #你希望玩家在提到多少次敏感词汇后被禁言?
+  times: 3
+  #当玩家提到敏感词时会被提示什么？
+  warnmessage: "拒绝提到敏感词汇，共建和谐游戏氛围!"
+  #当玩家被禁言时会被提示什么？{time}会显示为分钟
+  banmessage: "由于你多次提到敏感词汇，你将会被禁止发言 {time}"
+  #替换字符配置，默认为“***”
+  replacemessage: "***"
+
+#light_green浅绿色
+#green绿色
+#yellow黄色
+#orange金黄色/橙色
+#red红色
+AntiSpam:
+  #是否启用?<true/false>
+  enable: true
+  #提示的前缀是什么?<text>
+  prefix: "系统"
+  #玩家在多少秒后可以发送相同的内容?<number>,=0时将使用默认值
+  refresh-time: 5
+  #当玩家刷屏多少次后会被警告?<number>
+  times-warn: 3
+  #玩家刷屏多少次后将会被禁言?<number>
+  times-ban: 5
+  warn-message:
+    #玩家会被警告什么?
+    text: "请停止你的刷屏行为！"
+    #消息的颜色?
+    color: yellow
+  ban-message:
+    #被禁言时玩家会收到什么消息?
+    text: "由于你多次刷屏，你将会被禁止发言 {time}"
+    #消息的颜色?
+    color: red
+  #被禁言的时长？单位为秒.<number>
+  ban-time: 600
+  unban-message:
+    #你希望你的玩家在自动解除禁言后收到什么消息?
+    text: "你的禁言已被解除"
+    #消息的颜色?
+    color: green
+
+#是否允许玩家在禁言时使用指令?<true/false>
+AllowUseCommand: true
+
+ChatLog:
+  #是否启用?<true/false>
+  enable: true
+  #哪些类型的信息你希望被记录？<true/false>
+  type:
+    #正常聊天
+    chat: true
+    #使用指令
+    command: true
+    #哪些指令你不希望被记录？<text>(command name)
+  filter-command:
+    - "tell"
+    - "msg"
+    - "me"
+    - "w"
+  #是否区分信息类型？<true/false>
+  IfDevide-type: true
+  #是否区分不同的服务器？<true/false>
+  IfDevide-server: true
+
+#列表的标题<text>
+Server-Prefix: "称号系统"
+Prefixes:
+  BungeePrefix:
+    level:
+      1:
+        prefix1: # 这里可以随便写啥 只要不重复 其余同理 {prefix}将会显示此项
+          name: "称号1"
+          color: "red"
+        prefix2:
+          name: "称号2"
+          color: "red"
+      2:
+        prefix3:
+          name: "称号3"
+          color: "red"
+        prefix4:
+          name: "称号4"
+          color: "red"
+      3:
+        prefix5:
+          name: "称号5"
+          color: "red"
+        prefix6:
+          name: "称号6"
+          color: "red"
+
+GlobalMessage:
+  cost:
+    enable: true # 玩家是否需要消耗一个“喇叭”来喊话
+    # 注意这个喇叭只在玩家发带有信息的喊话时才会触发，如果只是普通的“邀请加入”则始终不要喇叭
+    message: 1 # 仅聊天需要花费多少喇叭
+    invite: 2 # 带邀请的需要花费多少喇叭
+  default_count: 10 # 玩家初始拥有的喇叭数量
+  showPrefix: true # 那么将以[喇叭] [称号] <玩家名> 消息  的格式广播
+  textCount: # 是否限制广播中的字符数量，如果true，则以max为最大字数
+    enable: true
+    max: 60
+  delay_shout_message: 10 # 玩家要等待多少秒后才能再次使用指令
+  delay_shout_invite: 30
+  delay_invite: 60
+
+TabList:
+  header: "§6§l在线玩家列表§r\n§a§l欢迎您 {name}"
+  footer: "§a共 {count} 名玩家在线§r\n§b您正在 §l{server} §r§b服务器"
+
+Quote:
+  format: |-
+    &7[引用] &f{quoted_player}: {quoted_message}
+    &7[回复] &f{player}: {reply}
+  buttons:
+    mention-color: GREEN
+    quote-color: YELLOW

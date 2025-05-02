@@ -1,0 +1,14 @@
+name: BungeeChat
+version: '${version}'
+main: org.bungeeChat.BungeeChat
+authors:
+  Jason31416
+  janhous
+  DeepSeek (R1)
+permissions:
+  bungeechat.quote.mapsize:
+    description: 查看引用缓存大小
+    default: op
+  bungeechat.quote.cleanupmap:
+    description: 清理引用缓存
+    default: op
