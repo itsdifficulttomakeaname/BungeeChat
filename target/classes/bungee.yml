@@ -1,5 +1,5 @@
 name: BungeeChat
-version: '7.4.1-SNAPSHOT'
+version: '7.4.4-SNAPSHOT'
 main: org.bungeeChat.BungeeChat
 authors:
   Jason31416

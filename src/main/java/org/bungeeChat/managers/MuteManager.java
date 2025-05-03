@@ -47,7 +47,8 @@ public class MuteManager {
         // 安排新的解禁任务
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             unmutePlayer(playerId, "自动解禁");
-            String text = plugin.getConfigManager().getMessages().getString("mute.unmute-success", "§a你已被解禁");
+            String text = plugin.getConfigManager().getMessages().getString("mute.unmute-success", "§a你已被解禁")
+                    .replace("{player}", player.getName());
             player.sendMessage(TextComponent.fromLegacyText(text));
         }, duration, TimeUnit.SECONDS);
 
@@ -55,6 +56,7 @@ public class MuteManager {
 
         String banMsg = plugin.getConfigManager().getMessages().getString("mute.mute-success",
                         "§4你已被禁言，原因: {reason}, 时间: {time}")
+                .replace("{player}", player.getName())
                 .replace("{reason}", reason)
                 .replace("{time}", formatDuration(duration));
         player.sendMessage(TextComponent.fromLegacyText(banMsg));
@@ -68,24 +70,6 @@ public class MuteManager {
         ProxiedPlayer player = ProxyServer.getInstance().getPlayer(playerId);
         if (player != null) {
             player.sendMessage(new TextComponent("§a你已被解禁，原因: " + reason));
-        }
-    }
-
-    public void handleViolation(ProxiedPlayer player) {
-        UUID playerId = player.getUniqueId();
-        int count = violationCounts.getOrDefault(playerId, 0) + 1;
-        violationCounts.put(playerId, count);
-
-        player.sendMessage(TextComponent.fromLegacyText(
-                "§6" + plugin.getConfigManager().getConfig().getString("AntiSwear.warnmessage")
-        ));
-
-        if (count >= plugin.getConfigManager().getConfig().getInt("AntiSwear.times", 3)) {
-            int duration = plugin.getConfigManager().getConfig().getInt("AntiSwear.time", 600);
-            String banmessage = "§c" + plugin.getConfigManager().getConfig().getString("AntiSwear.banmessage")
-                    .replace("{time}", formatDuration(duration));
-            player.sendMessage(TextComponent.fromLegacyText(banmessage));
-            mutePlayer(player, duration, "屏蔽词");
         }
     }
 

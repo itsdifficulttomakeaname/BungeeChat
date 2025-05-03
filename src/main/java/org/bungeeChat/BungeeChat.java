@@ -3,10 +3,19 @@ package org.bungeeChat;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.ConfigurationProvider;
+import net.md_5.bungee.config.YamlConfiguration;
+
 import org.bungeeChat.commands.*;
 import org.bungeeChat.listeners.PlayerLoginListener;
 import org.bungeeChat.managers.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +33,7 @@ public class BungeeChat extends Plugin {
     private ShoutManager shoutManager;
     private TabListManager tabListManager;
     private final Map<UUID, ServerSwitchToken> pendingSwitches = new ConcurrentHashMap<>();
+    private Configuration messagesConfig; // 使用明确的变量名
 
     @Override
     public void onEnable() {
@@ -73,6 +83,9 @@ public class BungeeChat extends Plugin {
                     entry.getValue().expireTime() < now
             );
         }, 1, 1, TimeUnit.MINUTES);
+
+        //读取提示信息
+        loadMessages();
 
         getProxy().getConsole().sendMessage(ChatColor.GREEN + "[BungeeChat] 插件已启用！");
     }
@@ -159,13 +172,41 @@ public class BungeeChat extends Plugin {
         }
     }
 
+    public Configuration getMessagesConfig() {
+        return messagesConfig;
+    }
+
     public String formatMessage(String path, ProxiedPlayer player, Object... replacements) {
-        String message = getConfigManager().getMessages().getString(path, "");
+        String message = messagesConfig.getString(path);
+        if (message == null) {
+            getLogger().warning("消息路径未找到: " + path);
+            return ChatColor.RED + "[错误] 未配置的消息";
+        }
+
         message = message.replace("{player}", player.getName());
 
         for (int i = 0; i < replacements.length; i += 2) {
-            message = message.replace("{" + replacements[i] + "}", String.valueOf(replacements[i + 1]));
+            if (i + 1 < replacements.length) {
+                message = message.replace(
+                        "{" + replacements[i] + "}",
+                        String.valueOf(replacements[i + 1])
+                );
+            }
         }
-        return message;
+        return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    private void loadMessages() {
+        try {
+            File messagesFile = new File(getDataFolder(), "messages.yml");
+            if (!messagesFile.exists()) {
+                try (InputStream in = getResourceAsStream("messages.yml")) {
+                    Files.copy(in, messagesFile.toPath());
+                }
+            }
+            messagesConfig = ConfigurationProvider.getProvider(YamlConfiguration.class).load(messagesFile);
+        } catch (IOException e) {
+            getLogger().severe("无法加载 messages.yml: " + e.getMessage());
+        }
     }
 }

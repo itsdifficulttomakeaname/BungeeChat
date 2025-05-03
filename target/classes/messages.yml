@@ -15,7 +15,8 @@ mute:
   unmute-auto: "§a你的禁言已自动解除。"
   unmute-admin: "§a你已被管理员解禁。"
   unmute-default: "§a你的禁言已解除。"
-  reason: "§c❌ 禁止刷屏"
+  reason:
+    spam: "§c❌ 禁止刷屏"
 
 # 称号
 #{title}相当于config.yml中的Server-Prefix
@@ -43,4 +44,8 @@ NoPermissionWarning:
   "prefixes.disable": "&c❌ 你没有禁用称号的权限！"
 
 AntiSpam:
-  warning: "§c警告！请降低发言频率，否则将被禁言 {time}"
+  warnmessage: "§c⚠️ 警告！请降低发言频率，否则将被禁言 {time}"
+
+AntiSwear:
+  warnmessage: "&6⚠️ 请勿发送违规内容！这是第 {count} 次警告，多次违反将禁言 {time} ！"
+  banmessage: "&c❌ 你因发送违规内容被禁言 {time}"

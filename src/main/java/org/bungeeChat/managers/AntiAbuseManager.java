@@ -3,6 +3,7 @@ package org.bungeeChat.managers;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.config.Configuration;
 import org.bungeeChat.BungeeChat;
 
 import java.util.*;
@@ -21,85 +22,87 @@ public class AntiAbuseManager {
     }
 
     public boolean handleAntiSwear(ProxiedPlayer player, String message) {
-        if (!plugin.getConfigManager().getConfig().getBoolean("AntiSwear.enable", true)) {
-            return false;
-        }
+        Configuration config = plugin.getConfigManager().getConfig();
+        Configuration messages = plugin.getMessagesConfig(); // 使用正确的方法
 
         boolean hasViolation = antiMessagePattern.matcher(message).find();
-        if (!hasViolation) {
-            return false;
-        }
+        if (hasViolation) {
+            if (!player.hasPermission("antispam.admin.bypass")) {
+                int count = incrementViolationCount(player.getUniqueId());
+                String count_number = String.valueOf(count);
 
-        int duration = plugin.getConfigManager().getConfig().getInt("AntiSwear.time", 600);
-        String replaced = antiMessagePattern.matcher(message)
-                .replaceAll(plugin.getConfigManager().getConfig().getString("AntiSwear.replacemessage", "***"));
+                String warnMessage = messages.getString("AntiSwear.warnmessage", "&6请勿发送违规内容！这是第{count}次警告")
+                        .replace("{count}", count_number)
+                        .replace("{PLayer}", player.getName());
+                player.sendMessage(warnMessage);
 
-        // 直接取消事件，不发送原始消息
-        if (!player.hasPermission("antispam.admin.bypass")) {
-            int count = incrementViolationCount(player.getUniqueId());
-            player.sendMessage(TextComponent.fromLegacyText(
-                    "§6" + plugin.getConfigManager().getConfig().getString("AntiSwear.warnmessage")
-            ));
-
-            if (count >= plugin.getConfigManager().getConfig().getInt("AntiSwear.times", 3)) {
-                String banMessage = plugin.getConfigManager().getConfig().getString("AntiSwear.banmessage", "§c你因发送违规内容被禁言 {time}")
-                        .replace("{time}", formatDuration(duration));
-                player.sendMessage(TextComponent.fromLegacyText(banMessage));
-                plugin.getMuteManager().mutePlayer(player, duration, "屏蔽词");
+                if (count >= config.getInt("AntiSwear.times", 3)) {
+                    plugin.getMuteManager().mutePlayer(
+                            player,
+                            config.getInt("AntiSwear.time", 600),
+                            "屏蔽词"
+                    );
+                }
             }
+            return true;
         }
-
-        // 返回true表示取消原始消息
-        return true;
+        return false;
     }
 
     public boolean handleAntiSpam(ProxiedPlayer player, String originalMessage) {
+        // 配置检查
         if (!plugin.getConfigManager().getConfig().getBoolean("AntiSpam.enable", true)) {
             return false;
         }
 
+        // 权限检查
         boolean isBypass = player.hasPermission("antispam.admin.bypass");
-        int timeWindow = plugin.getConfigManager().getConfig().getInt("AntiSpam.refresh-time", 5) * 1000;
+        int timeWindow = plugin.getConfigManager().getConfig().getInt("AntiSpam.refresh-time", 10) * 1000;
         int warnThreshold = plugin.getConfigManager().getConfig().getInt("AntiSpam.times-warn", 3);
         int banThreshold = plugin.getConfigManager().getConfig().getInt("AntiSpam.times-ban", 5);
         int duration = plugin.getConfigManager().getConfig().getInt("AntiSpam.ban-time", 600);
 
+        // 获取并清理时间戳
         List<Long> timestamps = getMessageTimestamps(player.getUniqueId());
         timestamps.removeIf(t -> System.currentTimeMillis() - t > timeWindow);
         int msgCount = timestamps.size();
 
-        if (isBypass) {
-            if (msgCount >= warnThreshold) {
-                // 保持原消息格式发送警告
-                TextComponent warning = new TextComponent(ChatColor.RED + "[警告] 请降低你的发言频率！");
-                player.sendMessage(warning);
-            }
-            addMessageTimestamp(player.getUniqueId());
+        // 添加当前时间戳
+        addMessageTimestamp(player.getUniqueId());
+
+        // 未达到警告阈值
+        if (msgCount < warnThreshold) {
             return false;
         }
 
-        if (msgCount >= warnThreshold) {
-            if (msgCount >= banThreshold && !player.hasPermission("antispam.admin.bypass")) {
-                plugin.getMuteManager().mutePlayer(
-                        player,
-                        duration,
-                        plugin.formatMessage("mute.reason.spam", player)
-                );
-                return true;
-            } else {
-                // 保持原消息格式发送警告
-                TextComponent warning = plugin.getChatManager().formatChatMessage(
-                        player,
-                        plugin.getPrefixManager().getActivePrefix(player.getName()),
-                        ChatColor.RED + "[警告] 请降低你的发言频率！"
-                );
+        // 处理有bypass权限的玩家
+        if (isBypass) {
+            if (msgCount >= warnThreshold) {
+                String warning = "&6请勿发送违规内容！";
                 player.sendMessage(warning);
             }
-            return true;
+            return false;
         }
 
-        addMessageTimestamp(player.getUniqueId());
-        return false;
+        // 处理达到警告阈值而没有超过禁言阈值的玩家（没有bypass权限）
+        if (msgCount <= banThreshold){
+            String warnMessage = plugin.getMessagesConfig().getString("AntiSpam.warnmessage", "&6请勿发送违规内容！这是第 {count} 次警告")
+                    .replace("{count}", String.valueOf(msgCount))
+                    .replace("{time}", formatDuration(duration));
+            player.sendMessage(warnMessage);
+            return false;
+        }
+
+        // 处理普通玩家
+        if (msgCount >= banThreshold) {
+            plugin.getMuteManager().mutePlayer(
+                    player,
+                    duration,
+                    "刷屏"
+            );
+        }
+
+        return true;
     }
 
     private int incrementViolationCount(UUID playerId) {
