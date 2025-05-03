@@ -1,6 +1,5 @@
 package org.bungeeChat.managers;
 
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
@@ -31,9 +30,10 @@ public class AntiAbuseManager {
                 int count = incrementViolationCount(player.getUniqueId());
                 String count_number = String.valueOf(count);
 
-                String warnMessage = messages.getString("AntiSwear.warnmessage", "&6请勿发送违规内容！这是第{count}次警告")
+                String warnMessage = messages.getString("AntiSwear.warnmessage", "§6请勿发送违规内容！这是第{count}次警告")
                         .replace("{count}", count_number)
-                        .replace("{PLayer}", player.getName());
+                        .replace("{PLayer}", player.getName())
+                        .replace("&", "§");
                 player.sendMessage(warnMessage);
 
                 if (count >= config.getInt("AntiSwear.times", 3)) {
@@ -78,7 +78,7 @@ public class AntiAbuseManager {
         // 处理有bypass权限的玩家
         if (isBypass) {
             if (msgCount >= warnThreshold) {
-                String warning = "&6请勿发送违规内容！";
+                String warning = "§6请勿发送违规内容！";
                 player.sendMessage(warning);
             }
             return false;
@@ -86,9 +86,10 @@ public class AntiAbuseManager {
 
         // 处理达到警告阈值而没有超过禁言阈值的玩家（没有bypass权限）
         if (msgCount <= banThreshold){
-            String warnMessage = plugin.getMessagesConfig().getString("AntiSpam.warnmessage", "&6请勿发送违规内容！这是第 {count} 次警告")
+            String warnMessage = plugin.getMessagesConfig().getString("AntiSpam.warnmessage", "§6请勿发送违规内容！这是第 {count} 次警告")
                     .replace("{count}", String.valueOf(msgCount))
-                    .replace("{time}", formatDuration(duration));
+                    .replace("{time}", formatDuration(duration))
+                    .replace("&", "§");
             player.sendMessage(warnMessage);
             return false;
         }
@@ -140,17 +141,6 @@ public class AntiAbuseManager {
     private Pattern compileAntiMessagePattern() {
         String regex = String.join("|", plugin.getConfigManager().getAntiMessages().getStringList("antimessages"));
         return Pattern.compile("(?i)(" + regex + ")");
-    }
-
-    private String getColorCode(String color) {
-        switch (color.toLowerCase()) {
-            case "red": return "§c";
-            case "orange": return "§e";
-            case "yellow": return "§6";
-            case "light_green": return "§a";
-            case "green": return "§2";
-            default: return "§f";
-        }
     }
 
     private String formatDuration(long seconds) {

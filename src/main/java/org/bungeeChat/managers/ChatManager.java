@@ -1,12 +1,10 @@
 package org.bungeeChat.managers;
 
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import org.bungeeChat.BungeeChat;
@@ -75,17 +73,6 @@ public class ChatManager implements Listener {
         return false;
     }
 
-    private String getColorCode(String color) {
-        switch (color.toLowerCase()) {
-            case "red": return "§c";
-            case "orange": return "§e";
-            case "yellow": return "§6";
-            case "light_green": return "§a";
-            case "green": return "§2";
-            default: return "§f";
-        }
-    }
-
     private void handleNormalMessage(ProxiedPlayer player, String message, ChatEvent event) {
         // 获取玩家称号
         Prefix prefix = plugin.getPrefixManager().getActivePrefix(player.getName());
@@ -121,7 +108,7 @@ public class ChatManager implements Listener {
         ));
         nameComponent.setHoverEvent(new HoverEvent(
                 HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("点击@" + sender.getName()).create()
+                new ComponentBuilder("点击 @" + sender.getName()).create()
         ));
         builder.append(nameComponent);
 

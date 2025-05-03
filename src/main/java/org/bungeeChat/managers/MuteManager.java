@@ -48,7 +48,8 @@ public class MuteManager {
         ScheduledTask task = plugin.getProxy().getScheduler().schedule(plugin, () -> {
             unmutePlayer(playerId, "自动解禁");
             String text = plugin.getConfigManager().getMessages().getString("mute.unmute-success", "§a你已被解禁")
-                    .replace("{player}", player.getName());
+                    .replace("{player}", player.getName())
+                    .replace("&", "§");
             player.sendMessage(TextComponent.fromLegacyText(text));
         }, duration, TimeUnit.SECONDS);
 
@@ -58,7 +59,8 @@ public class MuteManager {
                         "§4你已被禁言，原因: {reason}, 时间: {time}")
                 .replace("{player}", player.getName())
                 .replace("{reason}", reason)
-                .replace("{time}", formatDuration(duration));
+                .replace("{time}", formatDuration(duration))
+                .replace("&", "§");
         player.sendMessage(TextComponent.fromLegacyText(banMsg));
     }
 
@@ -99,17 +101,5 @@ public class MuteManager {
             return true;
         }
         return false;
-    }
-
-    public int incrementAndGetViolationCount(UUID playerId) {
-        return violationCounts.merge(playerId, 1, Integer::sum);
-    }
-
-    public void resetViolationCount(UUID playerId) {
-        violationCounts.remove(playerId);
-    }
-
-    public Map<UUID, Integer> getViolationCounts() {
-        return Collections.unmodifiableMap(violationCounts);
     }
 }
