@@ -1,5 +1,6 @@
 package org.bungeeChat.managers;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.bungeeChat.BungeeChat;
@@ -33,11 +34,7 @@ public class AntiAbuseManager {
         String replaced = antiMessagePattern.matcher(message)
                 .replaceAll(plugin.getConfigManager().getConfig().getString("AntiSwear.replacemessage", "***"));
 
-        // 广播替换后的消息
-        TextComponent component = new TextComponent("<" + player.getDisplayName() + "> " + replaced);
-        player.getServer().getInfo().getPlayers().forEach(p -> p.sendMessage(component));
-
-        // 处理违规计数
+        // 直接取消事件，不发送原始消息
         if (!player.hasPermission("antispam.admin.bypass")) {
             int count = incrementViolationCount(player.getUniqueId());
             player.sendMessage(TextComponent.fromLegacyText(
@@ -45,16 +42,18 @@ public class AntiAbuseManager {
             ));
 
             if (count >= plugin.getConfigManager().getConfig().getInt("AntiSwear.times", 3)) {
-                String banMessage = "§c" + plugin.getConfigManager().getConfig().getString("AntiSwear.banmessage")
+                String banMessage = plugin.getConfigManager().getConfig().getString("AntiSwear.banmessage", "§c你因发送违规内容被禁言 {time}")
                         .replace("{time}", formatDuration(duration));
                 player.sendMessage(TextComponent.fromLegacyText(banMessage));
                 plugin.getMuteManager().mutePlayer(player, duration, "屏蔽词");
             }
         }
+
+        // 返回true表示取消原始消息
         return true;
     }
 
-    public boolean handleAntiSpam(ProxiedPlayer player) {
+    public boolean handleAntiSpam(ProxiedPlayer player, String originalMessage) {
         if (!plugin.getConfigManager().getConfig().getBoolean("AntiSpam.enable", true)) {
             return false;
         }
@@ -71,17 +70,30 @@ public class AntiAbuseManager {
 
         if (isBypass) {
             if (msgCount >= warnThreshold) {
-                sendWarning(player);
+                // 保持原消息格式发送警告
+                TextComponent warning = new TextComponent(ChatColor.RED + "[警告] 请降低你的发言频率！");
+                player.sendMessage(warning);
             }
             addMessageTimestamp(player.getUniqueId());
             return false;
         }
 
         if (msgCount >= warnThreshold) {
-            if (msgCount >= banThreshold) {
-                plugin.getMuteManager().mutePlayer(player, duration, "刷屏");
+            if (msgCount >= banThreshold && !player.hasPermission("antispam.admin.bypass")) {
+                plugin.getMuteManager().mutePlayer(
+                        player,
+                        duration,
+                        plugin.formatMessage("mute.reason.spam", player)
+                );
+                return true;
             } else {
-                sendWarning(player);
+                // 保持原消息格式发送警告
+                TextComponent warning = plugin.getChatManager().formatChatMessage(
+                        player,
+                        plugin.getPrefixManager().getActivePrefix(player.getName()),
+                        ChatColor.RED + "[警告] 请降低你的发言频率！"
+                );
+                player.sendMessage(warning);
             }
             return true;
         }
@@ -107,10 +119,19 @@ public class AntiAbuseManager {
     }
 
     private void sendWarning(ProxiedPlayer player) {
-        String color = getColorCode(plugin.getConfigManager().getConfig().getString("AntiSpam.warn-message.color", "yellow"));
-        String text = plugin.getConfigManager().getConfig().getString("AntiSpam.warn-message.text", "请停止你的刷屏行为！");
-        String prefix = plugin.getConfigManager().getConfig().getString("AntiSpam.prefix");
-        player.sendMessage(new TextComponent(color + "[" + prefix + "]" + text));
+        String message = plugin.formatMessage(
+                "AntiSpam.warning",
+                player,
+                "time", formatDuration(plugin.getConfigManager().getConfig().getInt("AntiSpam.ban-time", 600))
+        );
+
+        // 保持原消息格式
+        TextComponent warning = plugin.getChatManager().formatChatMessage(
+                player,
+                plugin.getPrefixManager().getActivePrefix(player.getName()),
+                message
+        );
+        player.sendMessage(warning);
     }
 
     private Pattern compileAntiMessagePattern() {

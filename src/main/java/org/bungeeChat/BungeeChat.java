@@ -158,4 +158,14 @@ public class BungeeChat extends Plugin {
             return Math.max(0, expireTime - System.currentTimeMillis());
         }
     }
+
+    public String formatMessage(String path, ProxiedPlayer player, Object... replacements) {
+        String message = getConfigManager().getMessages().getString(path, "");
+        message = message.replace("{player}", player.getName());
+
+        for (int i = 0; i < replacements.length; i += 2) {
+            message = message.replace("{" + replacements[i] + "}", String.valueOf(replacements[i + 1]));
+        }
+        return message;
+    }
 }

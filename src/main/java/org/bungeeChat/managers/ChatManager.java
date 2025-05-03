@@ -49,8 +49,16 @@ public class ChatManager implements Listener {
         // 处理禁言检查
         if (handleMuteCheck(player, event)) return;
 
-        // 处理反垃圾/刷屏
-        if (handleAntiAbuse(player, event)) return;
+        // 处理反滥用
+        boolean cancelled = plugin.getAntiAbuseManager().handleAntiSwear(player, message);
+        if (!cancelled) {
+            cancelled = plugin.getAntiAbuseManager().handleAntiSpam(player, message);
+        }
+
+        if (cancelled) {
+            event.setCancelled(true);
+            return;
+        }
 
         // 处理正常消息
         handleNormalMessage(player, message, event);
@@ -65,22 +73,6 @@ public class ChatManager implements Listener {
             return true;
         }
         return false;
-    }
-
-    private boolean handleAntiAbuse(ProxiedPlayer player, ChatEvent event) {
-        boolean cancelled = false;
-
-        // 检查垃圾消息
-        if (plugin.getConfigManager().getConfig().getBoolean("AntiSwear.enable", true)) {
-            cancelled = plugin.getAntiAbuseManager().handleAntiSwear(player, event.getMessage());
-        }
-
-        // 检查刷屏
-        if (!cancelled && plugin.getConfigManager().getConfig().getBoolean("AntiSpam.enable", true)) {
-            cancelled = plugin.getAntiAbuseManager().handleAntiSpam(player);
-        }
-
-        return cancelled;
     }
 
     private String getColorCode(String color) {
@@ -113,7 +105,7 @@ public class ChatManager implements Listener {
         event.setCancelled(true);
     }
 
-    private TextComponent formatChatMessage(ProxiedPlayer sender, Prefix prefix, String rawMessage) {
+    TextComponent formatChatMessage(ProxiedPlayer sender, Prefix prefix, String rawMessage) {
         ComponentBuilder builder = new ComponentBuilder();
 
         // 添加称号

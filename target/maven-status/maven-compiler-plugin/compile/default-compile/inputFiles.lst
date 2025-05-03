@@ -10,6 +10,7 @@ C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bung
 C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\commands\UnmuteCommand.java
 C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\listeners\PlayerLoginListener.java
 C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\listeners\TabListListener.java
+C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\managers\AntiAbuseManager.java
 C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\managers\ChatManager.java
 C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\managers\ConfigurationManager.java
 C:\Users\Administrator\IdeaProjects\FromGithub\BungeeChat\src\main\java\org\bungeeChat\managers\CooldownManager.java
