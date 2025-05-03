@@ -1,0 +1,45 @@
+name: BungeeChat
+version: '${version}'
+main: org.bungeeChat.BungeeChat
+authors:
+  Jason31416
+  janhous
+  DeepSeek (R1)
+permissions:
+  # 聊天功能
+  bungeechat.quote:
+    description: 允许使用消息引用功能
+    default: true
+  bungeechat.quote.admin:
+    description: 管理引用缓存
+    default: op
+  bungeechat.mention:
+    description: 允许使用@提及功能
+    default: true
+
+  # 称号系统
+  bungeechat.prefix.list:
+    description: 查看可用称号列表
+    default: true
+  bungeechat.prefix.use:
+    description: 使用称号
+    default: true
+  BungeePrefix.level.*:
+    description: 通配符权限，控制各级称号的访问
+    default: op
+
+  # 管理指令
+  bungeechat.mute:
+    description: 禁言玩家
+    default: op
+  bungeechat.unmute:
+    description: 解除禁言
+    default: op
+  bungeechat.reload:
+    description: 重载插件配置
+    default: op
+
+  # 喊话相关
+  bungeechat.shout.bypass:
+    description: "绕过喇叭冷却时间限制"
+    default: op # 仅OP玩家默认拥有此权限
