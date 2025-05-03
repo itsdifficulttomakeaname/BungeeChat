@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.List;
 
 public class BungeeChat extends Plugin {
+    private AntiAbuseManager antiAbuseManager;
     private ConfigurationManager configManager;
     private PlayerDataManager playerDataManager;
     private ChatManager chatManager;
@@ -35,6 +36,7 @@ public class BungeeChat extends Plugin {
         cooldownManager = new CooldownManager(this);
         shoutManager = new ShoutManager(this);
         tabListManager = new TabListManager(this);
+        antiAbuseManager = new AntiAbuseManager(this);
 
         // 注册命令
         getProxy().getPluginManager().registerCommand(this, new ReloadCommand(this));
@@ -116,6 +118,10 @@ public class BungeeChat extends Plugin {
 
     public TabListManager getTabListManager() {
         return tabListManager;
+    }
+
+    public AntiAbuseManager getAntiAbuseManager() {
+        return antiAbuseManager;
     }
 
     public Map<UUID, ServerSwitchToken> getPendingSwitches() {

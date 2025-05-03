@@ -72,104 +72,15 @@ public class ChatManager implements Listener {
 
         // 检查垃圾消息
         if (plugin.getConfigManager().getConfig().getBoolean("AntiSwear.enable", true)) {
-            cancelled = handleAntiSwear(player, event);
+            cancelled = plugin.getAntiAbuseManager().handleAntiSwear(player, event.getMessage());
         }
 
         // 检查刷屏
         if (!cancelled && plugin.getConfigManager().getConfig().getBoolean("AntiSpam.enable", true)) {
-            cancelled = handleAntiSpam(player, event);
+            cancelled = plugin.getAntiAbuseManager().handleAntiSpam(player);
         }
 
         return cancelled;
-    }
-
-    private boolean handleAntiSwear(ProxiedPlayer player, ChatEvent event) {
-        Configuration config = plugin.getConfigManager().getConfig();
-        String message = event.getMessage();
-        boolean hasViolation = antiMessagePattern.matcher(message).find();
-        int duration = config.getInt("AntiSwear.time", 600);
-
-        if (hasViolation) {
-            event.setCancelled(true);
-            String replaced = antiMessagePattern.matcher(message)
-                    .replaceAll(config.getString("AntiSwear.replacemessage", "***"));
-
-            // 广播替换后的消息
-            TextComponent component = new TextComponent(
-                    "<" + player.getDisplayName() + "> " + replaced
-            );
-            ProxyServer.getInstance().getPlayers().forEach(p -> p.sendMessage(component));
-
-            // 处理违规计数
-            if (!player.hasPermission("antispam.admin.bypass")) {
-                int count = plugin.getViolationCounts().getOrDefault(player.getUniqueId(), 0) + 1;
-                plugin.getViolationCounts().put(player.getUniqueId(), count);
-
-                player.sendMessage(TextComponent.fromLegacyText(
-                        "§6" + config.getString("AntiSwear.warnmessage")
-                ));
-
-                if (count >= config.getInt("AntiSwear.times", 3)) {
-                    String banmessage = "§c" + config.getString("AntiSwear.banmessage")
-                            .replace("{time}", formatDuration(config.getInt("AntiSwear.time", 600)));
-                    player.sendMessage(TextComponent.fromLegacyText(banmessage));
-                    plugin.getMuteManager().mutePlayer(player, duration, "屏蔽词");
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private boolean handleAntiSpam(ProxiedPlayer player, ChatEvent event) {
-        Configuration config = plugin.getConfigManager().getConfig();
-        boolean isBypass = player.hasPermission("antispam.admin.bypass");
-
-        // 获取配置参数
-        int timeWindow = config.getInt("AntiSpam.refresh-time", 5) * 1000;
-        int warnThreshold = config.getInt("AntiSpam.times-warn", 3);
-        int banThreshold = config.getInt("AntiSpam.times-ban", 5);
-        int duration = config.getInt("AntiSpam.ban-time", 600);
-
-        // 获取时间戳记录
-        List<Long> timestamps = plugin.getMessageTimestamps()
-                .computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>());
-
-        // 清理过期记录
-        timestamps.removeIf(t -> System.currentTimeMillis() - t > timeWindow);
-        int msgCount = timestamps.size();
-
-        // bypass玩家处理逻辑
-        if (isBypass) {
-            if (msgCount >= warnThreshold) {
-                sendWarning(player);
-            }
-            timestamps.add(System.currentTimeMillis());
-            return false;
-        }
-
-        // 普通玩家处理逻辑
-        if (msgCount >= warnThreshold) {
-            event.setCancelled(true);
-
-            if (msgCount >= banThreshold) {
-                plugin.getMuteManager().mutePlayer(player, duration, "刷屏");
-            } else {
-                sendWarning(player);
-            }
-            return true;
-        }
-
-        timestamps.add(System.currentTimeMillis());
-        return false;
-    }
-
-    private void sendWarning(ProxiedPlayer player) {
-        Configuration config = plugin.getConfigManager().getConfig();
-        String color = getColorCode(config.getString("AntiSpam.warn-message.color", "yellow"));
-        String text = config.getString("AntiSpam.warn-message.text", "请停止你的刷屏行为！");
-        String prefix = config.getString("AntiSpam.prefix");
-        player.sendMessage(new TextComponent(color + "[" + prefix + "]" + text));
     }
 
     private String getColorCode(String color) {

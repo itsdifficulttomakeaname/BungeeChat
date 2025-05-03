@@ -1,5 +1,6 @@
 package org.bungeeChat.managers;
 
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
@@ -62,23 +63,11 @@ public class MuteManager {
     public void unmutePlayer(UUID playerId, String reason) {
         mutedPlayers.remove(playerId);
         muteReasons.remove(playerId);
-        muteEndTimes.remove(playerId);
-        violationCounts.remove(playerId);
+        plugin.getAntiAbuseManager().resetViolationCount(playerId); // 重置违规计数
 
-        if (muteTasks.containsKey(playerId)) {
-            muteTasks.get(playerId).cancel();
-            muteTasks.remove(playerId);
-        }
-
-        ProxiedPlayer player = plugin.getProxy().getPlayer(playerId);
+        ProxiedPlayer player = ProxyServer.getInstance().getPlayer(playerId);
         if (player != null) {
-            String message;
-            if ("自动解禁".equals(reason)) {
-                message = plugin.getConfigManager().getMessages().getString("mute.unmute-auto", "§a你的禁言已自动解除");
-            } else {
-                message = plugin.getConfigManager().getMessages().getString("mute.unmute-admin", "§a你已被管理员解禁");
-            }
-            player.sendMessage(TextComponent.fromLegacyText(message));
+            player.sendMessage(new TextComponent("§a你已被解禁，原因: " + reason));
         }
     }
 
