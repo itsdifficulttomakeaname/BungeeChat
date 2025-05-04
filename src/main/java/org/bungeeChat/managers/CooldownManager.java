@@ -1,6 +1,7 @@
 package org.bungeeChat.managers;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.config.Configuration;
 import org.bungeeChat.BungeeChat;
 
 import java.util.Map;
@@ -44,7 +45,18 @@ public class CooldownManager {
     }
 
     private long getCooldownDuration(String cooldownType) {
-        // 默认60秒冷却
-        return 60;
+        // 从配置文件中获取冷却时间
+        Configuration config = bungeeChat.getConfigManager().getConfig();
+
+        switch (cooldownType) {
+            case "shout":
+                return config.getInt("GlobalMessage.delay_shout_message", 10);
+            case "shout_invite":
+                return config.getInt("GlobalMessage.delay_shout_invite", 30);
+            case "invite":
+                return config.getInt("GlobalMessage.delay_invite", 60);
+            default:
+                return 60; // 默认值
+        }
     }
 }

@@ -71,7 +71,9 @@ public class MuteManager {
 
         ProxiedPlayer player = ProxyServer.getInstance().getPlayer(playerId);
         if (player != null) {
-            player.sendMessage(new TextComponent("§a你已被解禁，原因: " + reason));
+            String info = plugin.getMessage("mute.unmute-info")
+                    .replace("{method}", reason);
+            player.sendMessage(info);
         }
     }
 

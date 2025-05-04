@@ -72,6 +72,12 @@ public class InviteCommand extends Command implements TabExecutor {
         if (plugin.getCooldownManager().isOnCooldown(player, "invite")) {
             long remaining = plugin.getCooldownManager().getRemainingCooldown(player, "invite");
             player.sendMessage(createText("请等待 " + remaining + " 秒后再发送邀请！", ChatColor.RED));
+
+            plugin.getCooldownManager().setCooldown(
+                    player,
+                    "invite",
+                    System.currentTimeMillis() / 1000
+            );
             return;
         }
 

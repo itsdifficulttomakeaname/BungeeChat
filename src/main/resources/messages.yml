@@ -12,9 +12,11 @@ mute:
   player-not-found: "§c未找到玩家 §e{player}"
   mute-success: "§a已禁言玩家 §e{player} §e{time}"
   already-muted: "§c玩家 §e{player} §c已被禁言，已覆盖原禁言时间。"
-  unmute-auto: "§a你的禁言已自动解除。"
-  unmute-admin: "§a你已被管理员解禁。"
-  unmute-default: "§a你的禁言已解除。"
+  unmute-info: "你的禁言已被解除，方式是: {method}"
+  #unmute-auto: "§a你的禁言已自动解除。"
+  #unmute-admin: "§a你已被管理员解禁。"
+  #unmute-default: "§a你的禁言已解除。"
+  already-mute: "你已被禁言，剩余时间 {time}"
   reason:
     spam: "§c❌ 禁止刷屏"
 
@@ -48,3 +50,6 @@ AntiSpam:
 
 AntiSwear:
   warnmessage: "&6⚠ 请勿发送违规内容！这是第 {count} 次警告，多次违反将禁言 {time} ！"
+
+At:
+  target: "玩家 {player} 提到了你！"

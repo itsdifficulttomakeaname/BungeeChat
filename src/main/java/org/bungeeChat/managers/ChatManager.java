@@ -53,8 +53,12 @@ public class ChatManager implements Listener {
         Boolean isSpam = !isFilter && plugin.getAntiAbuseManager().handleAntiSpam(player, message);
 
         if (isFilter || isSpam){
+            //plugin.getProxy().getConsole().sendMessage("[Log] 处理取消聊天事件前");
             event.setCancelled(true);
+            //plugin.getProxy().getConsole().sendMessage("[Log] 处理取消聊天事件后");
+
             if (isFilter){
+                //plugin.getProxy().getConsole().sendMessage("[Log] 信息被替换过，现在处理被替换过的信息");
                 handleNormalMessage(player, filteredMessage, event);
             }
             return;
@@ -67,8 +71,9 @@ public class ChatManager implements Listener {
     private boolean handleMuteCheck(ProxiedPlayer player, ChatEvent event) {
         if (plugin.getMuteManager().isMuted(player.getUniqueId())) {
             long remaining = plugin.getMuteManager().getRemainingMuteTime(player.getUniqueId());
-            player.sendMessage(new TextComponent("§c你已被禁言，剩余时间: " +
-                    formatDuration(remaining)));
+            String tip = plugin.getMessage("mute.already-mute")
+                    .replace("{time}", formatDuration(remaining));
+            player.sendMessage(tip);
             event.setCancelled(true);
             return true;
         }
@@ -228,7 +233,9 @@ public class ChatManager implements Listener {
                     String targetName = part.substring(1);
                     for (ProxiedPlayer target : sender.getServer().getInfo().getPlayers()) {
                         if (target.getName().equalsIgnoreCase(targetName)) {
-                            target.sendMessage(new TextComponent("§e玩家 " + sender.getName() + " 提到了你！"));
+                            String tip = plugin.getMessage("At.target")
+                                    .replace("{player}", sender.getName());
+                            target.sendMessage(tip);
 
                             // 发送音效通知
                             sendMentionSound(target, "entity.player.levelup");

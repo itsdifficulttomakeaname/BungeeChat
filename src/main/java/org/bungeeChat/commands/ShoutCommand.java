@@ -59,7 +59,8 @@ public class ShoutCommand extends Command implements TabExecutor {
                 handlePlayerBlock(player, args);
                 break;
             default:
-                handleDefaultShout(player, args);
+                player.sendMessage("未知的子命令");
+                sendUsage(player);
                 break;
         }
     }
@@ -87,7 +88,7 @@ public class ShoutCommand extends Command implements TabExecutor {
         // 拼接消息内容(去掉"m "前缀)
         String message = String.join(" ", args).substring(2);
         broadcastMessage(player, message);
-        applyShoutCost(player);
+        applyShoutCost(player, "m");
     }
 
     // 处理交互式喊话(带加入按钮)
@@ -104,7 +105,7 @@ public class ShoutCommand extends Command implements TabExecutor {
         // 拼接消息内容(去掉"im "前缀)
         String message = String.join(" ", args).substring(3);
         broadcastInteractiveMessage(player, message);
-        applyShoutCost(player);
+        applyShoutCost(player, "im");
     }
 
     // 处理玩家屏蔽功能
@@ -116,17 +117,6 @@ public class ShoutCommand extends Command implements TabExecutor {
 
         String targetName = args[1];
         togglePlayerBlock(player, targetName);
-    }
-
-    // 处理默认喊话(无子命令)
-    private void handleDefaultShout(ProxiedPlayer player, String[] args) {
-        if (!checkShoutConditions(player)) {
-            return;
-        }
-
-        String message = String.join(" ", args);
-        broadcastMessage(player, message);
-        applyShoutCost(player);
     }
 
     // 检查喊话条件(冷却时间和剩余次数)
@@ -154,10 +144,18 @@ public class ShoutCommand extends Command implements TabExecutor {
     }
 
     // 扣除喇叭次数并设置冷却
-    private void applyShoutCost(ProxiedPlayer player) {
+    private void applyShoutCost(ProxiedPlayer player,String arg) {
         int shoutCount = plugin.getShoutManager().getShoutCount(player);
         plugin.getShoutManager().setShoutCount(player, shoutCount - 1);
-        plugin.getCooldownManager().setCooldown(player, "shout", System.currentTimeMillis() / 1000);
+
+        // 根据喊话类型设置不同的冷却
+        String cooldownType = arg.equalsIgnoreCase("im") ?
+                "shout_invite" : "shout";
+        plugin.getCooldownManager().setCooldown(
+                player,
+                cooldownType,
+                System.currentTimeMillis() / 1000
+        );
     }
 
     // 广播普通消息
