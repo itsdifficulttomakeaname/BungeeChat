@@ -1,22 +1,24 @@
 package org.bungeeChat.commands;
 
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 import org.bungeeChat.BungeeChat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-public class MuteCommand extends Command {
+public class MuteCommand extends Command implements TabExecutor {
     private final BungeeChat plugin;
 
     public MuteCommand(BungeeChat plugin) {
         super("mute", "bungeechat.admin.mute");
         this.plugin = plugin;
     }
-
-
 
     @Override
     public void execute(CommandSender sender, String[] args) {
@@ -65,5 +67,33 @@ public class MuteCommand extends Command {
         } catch (NumberFormatException e) {
             sender.sendMessage(new TextComponent("§c时间必须是整数！"));
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender,  String[] args) {
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            // 补全玩家名
+            for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
+                if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+                    completions.add(player.getName());
+                }
+            }
+        } else if (args.length == 2) {
+            // 补全时间单位
+            String[] timeUnits = {"s", "m", "h", "d"};
+            for (String unit : timeUnits) {
+                if (unit.startsWith(args[1].toLowerCase())) {
+                    completions.add(unit);
+                }
+            }
+            // 添加时间提示
+            if (args[1].isEmpty()) {
+                completions.add("<time>");
+            }
+        }
+
+        return completions;
     }
 }

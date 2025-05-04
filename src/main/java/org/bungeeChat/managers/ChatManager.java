@@ -47,14 +47,16 @@ public class ChatManager implements Listener {
         // 处理禁言检查
         if (handleMuteCheck(player, event)) return;
 
-        // 处理反滥用
-        boolean cancelled = plugin.getAntiAbuseManager().handleAntiSwear(player, message);
-        if (!cancelled) {
-            cancelled = plugin.getAntiAbuseManager().handleAntiSpam(player, message);
-        }
+        // 处理刷屏和违禁词
+        String filteredMessage = plugin.getAntiAbuseManager().handleAntiSwear(player, message);
+        Boolean isFilter = !filteredMessage.equals(message);
+        Boolean isSpam = !isFilter && plugin.getAntiAbuseManager().handleAntiSpam(player, message);
 
-        if (cancelled) {
+        if (isFilter || isSpam){
             event.setCancelled(true);
+            if (isFilter){
+                handleNormalMessage(player, filteredMessage, event);
+            }
             return;
         }
 

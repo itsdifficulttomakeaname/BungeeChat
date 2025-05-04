@@ -4,22 +4,21 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.config.Configuration;
+
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-
 import org.bungeeChat.commands.*;
 import org.bungeeChat.listeners.PlayerLoginListener;
 import org.bungeeChat.managers.*;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.List;
 
 public class BungeeChat extends Plugin {
     private AntiAbuseManager antiAbuseManager;
@@ -34,6 +33,7 @@ public class BungeeChat extends Plugin {
     private final Map<UUID, ServerSwitchToken> pendingSwitches = new ConcurrentHashMap<>();
     private Configuration messagesConfig; // 使用明确的变量名
     private Configuration messages;
+    private Configuration antiMessagesConfig;
 
     @Override
     public void onEnable() {
@@ -137,6 +137,10 @@ public class BungeeChat extends Plugin {
         return antiAbuseManager;
     }
 
+    public Configuration getAntiMessagesConfig() {
+        return antiMessagesConfig;
+    }
+
     public Map<UUID, ServerSwitchToken> getPendingSwitches() {
         return pendingSwitches;
     }
@@ -153,12 +157,36 @@ public class BungeeChat extends Plugin {
         return token;
     }
 
-    // 修改验证逻辑添加尝试次数限制
-    public boolean validateToken(UUID tokenId, String serverName) {
-        ServerSwitchToken token = pendingSwitches.get(tokenId);
-        return token != null &&
-                !token.isExpired() &&
-                token.targetServer().equals(serverName);
+    public void loadAntiMessagesConfig() {
+        File file = new File(getDataFolder(), "antimessage.yml");
+
+        // 如果文件不存在，从JAR中复制默认配置
+        if (!file.exists()) {
+            try (InputStream in = getResourceAsStream("antimessage.yml")) {
+                if (in == null) {
+                    getLogger().severe("无法找到默认的antimessage.yml资源!");
+                    return;
+                }
+
+                // 确保配置目录存在
+                if (!getDataFolder().exists()) {
+                    getDataFolder().mkdir();
+                }
+
+                // 复制文件
+                Files.copy(in, file.toPath());
+            } catch (IOException e) {
+                getLogger().severe("无法创建antimessage.yml文件: " + e.getMessage());
+                return;
+            }
+        }
+
+        // 加载配置
+        try {
+            antiMessagesConfig = ConfigurationProvider.getProvider(YamlConfiguration.class).load(file);
+        } catch (IOException e) {
+            getLogger().severe("无法加载antimessage.yml文件: " + e.getMessage());
+        }
     }
 
     public record ServerSwitchToken(UUID tokenId, String targetServer, long expireTime) {

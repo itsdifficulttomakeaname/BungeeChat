@@ -5,37 +5,72 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.config.Configuration;
 import org.bungeeChat.BungeeChat;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AntiAbuseManager {
     private final BungeeChat plugin;
     private final Pattern antiMessagePattern;
     private final Map<UUID, Integer> violationCounts = new ConcurrentHashMap<>();
-    private final Map<UUID, List<Long>> messageTimestamps = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> firstMessageTimes = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> messageCounts = new ConcurrentHashMap<>();
 
     public AntiAbuseManager(BungeeChat plugin) {
         this.plugin = plugin;
         this.antiMessagePattern = compileAntiMessagePattern();
+        loadAntiMessagesConfig();
     }
 
-    public boolean handleAntiSwear(ProxiedPlayer player, String message) {
-        Configuration config = plugin.getConfigManager().getConfig();
-        String messages = plugin.getMessage("AntiSwear.warnmessage");
+    private void loadAntiMessagesConfig() {
+        // 使用正确的文件名 antimessage.yml
+        File file = new File(plugin.getDataFolder(), "antimessage.yml");
+        if (!file.exists()) {
+            try (InputStream in = plugin.getResourceAsStream("antimessage.yml")) {
+                if (in == null) {
+                    plugin.getLogger().severe("无法找到默认的antimessage.yml资源!");
+                    return;
+                }
+                Files.copy(in, file.toPath());
+            } catch (IOException e) {
+                plugin.getLogger().severe("无法创建antimessage.yml文件: " + e.getMessage());
+                return;
+            }
+        }
+        plugin.loadAntiMessagesConfig();
+    }
 
-        boolean hasViolation = antiMessagePattern.matcher(message).find();
-        if (hasViolation) {
+    public String handleAntiSwear(ProxiedPlayer player, String message) {
+        Configuration config = plugin.getConfigManager().getConfig();
+        String original = message;
+        boolean hasSwear = false;
+
+        // 从AntiSwear节点获取替换字符串
+        String replaceWith = config.getString("AntiSwear.replacemessage", "***");
+
+        // 检查违禁词
+        if (antiMessagePattern.matcher(message).find()) {
+            hasSwear = true;
+            // 替换违禁词
+            message = antiMessagePattern.matcher(message).replaceAll(replaceWith);
+        }
+
+        if (hasSwear) {
             if (!player.hasPermission("antispam.admin.bypass")) {
                 int count = incrementViolationCount(player.getUniqueId());
-                String count_number = String.valueOf(count);
-
-                String warnMessage = messages
-                        .replace("{count}", count_number)
-                        .replace("{PLayer}", player.getName())
-                        .replace("{time}", formatDuration(config.getInt("AntiSwear.time", 600)))
-                        .replace("&", "§");
-                player.sendMessage(warnMessage);
+                if (count < config.getInt("AntiSwear.times", 3)) {
+                    String warnMessage = plugin.getMessage("AntiSwear.warnmessage")
+                            .replace("{count}", String.valueOf(count))
+                            .replace("{PLayer}", player.getName())
+                            .replace("{time}", formatDuration(config.getInt("AntiSwear.time", 600)))
+                            .replace("&", "§");
+                    player.sendMessage(warnMessage);
+                }
 
                 if (count >= config.getInt("AntiSwear.times", 3)) {
                     plugin.getMuteManager().mutePlayer(
@@ -43,50 +78,50 @@ public class AntiAbuseManager {
                             config.getInt("AntiSwear.time", 600),
                             "屏蔽词"
                     );
+                    String banMessage = config.getString("AntiSwear.banmessage", "由于你多次提到敏感词汇，你将会被禁止发言 {time}")
+                            .replace("{time}", formatDuration(config.getInt("AntiSwear.time", 600)));
+                    player.sendMessage(banMessage);
                 }
             }
-            return true;
+            return message; // 返回替换后的消息
         }
-        return false;
+        return original;
     }
 
-    public boolean handleAntiSpam(ProxiedPlayer player, String originalMessage) {
+    public boolean handleAntiSpam(ProxiedPlayer player, String message) {
+        Configuration config = plugin.getConfigManager().getConfig();
+
         // 配置检查
-        if (!plugin.getConfigManager().getConfig().getBoolean("AntiSpam.enable", true)) {
+        if (!config.getBoolean("AntiSpam.enable", true)) {
             return false;
         }
 
         // 权限检查
-        boolean isBypass = player.hasPermission("antispam.admin.bypass");
-        int timeWindow = plugin.getConfigManager().getConfig().getInt("AntiSpam.refresh-time", 10) * 1000;
-        int warnThreshold = plugin.getConfigManager().getConfig().getInt("AntiSpam.times-warn", 3);
-        int banThreshold = plugin.getConfigManager().getConfig().getInt("AntiSpam.times-ban", 5);
-        int duration = plugin.getConfigManager().getConfig().getInt("AntiSpam.ban-time", 600);
-
-        // 获取并清理时间戳
-        List<Long> timestamps = getMessageTimestamps(player.getUniqueId());
-        timestamps.removeIf(t -> System.currentTimeMillis() - t > timeWindow);
-        int msgCount = timestamps.size();
-
-        // 添加当前时间戳
-        addMessageTimestamp(player.getUniqueId());
-
-        // 未达到警告阈值
-        if (msgCount < warnThreshold) {
+        if (player.hasPermission("antispam.admin.bypass")) {
             return false;
         }
 
-        // 处理有bypass权限的玩家
-        if (isBypass) {
-            if (msgCount >= warnThreshold) {
-                String warning = "§6请勿发送违规内容！";
-                player.sendMessage(warning);
-            }
+        UUID playerId = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+        int refreshTime = config.getInt("AntiSpam.refresh-time", 10) * 1000;
+        int warnThreshold = config.getInt("AntiSpam.times-warn", 3);
+        int banThreshold = config.getInt("AntiSpam.times-ban", 5);
+        int duration = config.getInt("AntiSpam.ban-time", 600);
+
+        // 检查是否在时间窗口内
+        Long firstMessageTime = firstMessageTimes.get(playerId);
+        if (firstMessageTime == null || currentTime - firstMessageTime > refreshTime) {
+            // 新时间窗口开始
+            firstMessageTimes.put(playerId, currentTime);
+            messageCounts.put(playerId, 1);
             return false;
         }
 
-        // 处理达到警告阈值而没有超过禁言阈值的玩家（没有bypass权限）
-        if (msgCount <= banThreshold){
+        // 增加消息计数
+        int msgCount = messageCounts.merge(playerId, 1, Integer::sum);
+
+        // 处理警告
+        if (msgCount >= warnThreshold && msgCount < banThreshold) {
             String warnMessage = plugin.getMessage("AntiSpam.warnmessage")
                     .replace("{count}", String.valueOf(msgCount))
                     .replace("{time}", formatDuration(duration))
@@ -95,16 +130,17 @@ public class AntiAbuseManager {
             return false;
         }
 
-        // 处理普通玩家
+        // 处理禁言
         if (msgCount >= banThreshold) {
             plugin.getMuteManager().mutePlayer(
                     player,
                     duration,
                     "刷屏"
             );
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private int incrementViolationCount(UUID playerId) {
@@ -115,32 +151,17 @@ public class AntiAbuseManager {
         violationCounts.remove(playerId);
     }
 
-    private List<Long> getMessageTimestamps(UUID playerId) {
-        return messageTimestamps.computeIfAbsent(playerId, k -> new ArrayList<>());
-    }
-
-    private void addMessageTimestamp(UUID playerId) {
-        getMessageTimestamps(playerId).add(System.currentTimeMillis());
-    }
-
-    private void sendWarning(ProxiedPlayer player) {
-        String message = plugin.formatMessage(
-                "AntiSpam.warning",
-                player,
-                "time", formatDuration(plugin.getConfigManager().getConfig().getInt("AntiSpam.ban-time", 600))
-        );
-
-        // 保持原消息格式
-        TextComponent warning = plugin.getChatManager().formatChatMessage(
-                player,
-                plugin.getPrefixManager().getActivePrefix(player.getName()),
-                message
-        );
-        player.sendMessage(warning);
-    }
-
     private Pattern compileAntiMessagePattern() {
-        String regex = String.join("|", plugin.getConfigManager().getAntiMessages().getStringList("antimessages"));
+        // 确保从正确的配置节点获取违禁词列表
+        List<String> badWords = plugin.getConfigManager().getAntiMessages().getStringList("filtered-words");
+        if (badWords.isEmpty()) {
+            plugin.getLogger().warning("违禁词列表为空，将不会过滤任何消息!");
+            return Pattern.compile("(?!)"); // 匹配空模式
+        }
+
+        String regex = badWords.stream()
+                .map(Pattern::quote)
+                .collect(Collectors.joining("|"));
         return Pattern.compile("(?i)(" + regex + ")");
     }
 
