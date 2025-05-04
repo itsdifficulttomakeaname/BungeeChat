@@ -5,9 +5,8 @@ import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bungeeChat.BungeeChat;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public class ConfigurationManager {
@@ -44,7 +43,7 @@ public class ConfigurationManager {
                     Files.copy(input, messagesFile.toPath());
                 }
             }
-            messages = ConfigurationProvider.getProvider(YamlConfiguration.class).load(messagesFile);
+            messages = loadYamlWithUTF8(messagesFile);
 
             // 加载反垃圾消息文件
             File antiMessagesFile = new File(plugin.getDataFolder(), "antimessage.yml");
@@ -75,5 +74,14 @@ public class ConfigurationManager {
 
     public Configuration getAntiMessages() {
         return antiMessages;
+    }
+
+
+    private Configuration loadYamlWithUTF8(File file) throws IOException {
+        return ConfigurationProvider.getProvider(YamlConfiguration.class)
+                .load(new InputStreamReader(
+                        new FileInputStream(file),
+                        StandardCharsets.UTF_8
+                ));
     }
 }

@@ -22,7 +22,7 @@ AntiSpam:
   #提示的前缀是什么?<text>
   prefix: "系统"
   #玩家在多少秒后可以发送相同的内容?<number>,=0时将使用默认值
-  refresh-time: 5
+  refresh-time: 10
   #当玩家刷屏多少次后会被警告?<number>
   times-warn: 3
   #玩家刷屏多少次后将会被禁言?<number>

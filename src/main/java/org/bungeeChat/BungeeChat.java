@@ -12,9 +12,8 @@ import org.bungeeChat.commands.*;
 import org.bungeeChat.listeners.PlayerLoginListener;
 import org.bungeeChat.managers.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +33,7 @@ public class BungeeChat extends Plugin {
     private TabListManager tabListManager;
     private final Map<UUID, ServerSwitchToken> pendingSwitches = new ConcurrentHashMap<>();
     private Configuration messagesConfig; // 使用明确的变量名
+    private Configuration messages;
 
     @Override
     public void onEnable() {
@@ -84,8 +84,8 @@ public class BungeeChat extends Plugin {
             );
         }, 1, 1, TimeUnit.MINUTES);
 
-        //读取提示信息
-        loadMessages();
+        // 初始化配置
+        configManager.reloadConfigs();
 
         getProxy().getConsole().sendMessage(ChatColor.GREEN + "[BungeeChat] 插件已启用！");
     }
@@ -172,8 +172,9 @@ public class BungeeChat extends Plugin {
         }
     }
 
-    public Configuration getMessagesConfig() {
-        return messagesConfig;
+    public String getMessage(String path) {
+        String message = configManager.getMessages().getString(path, "§c未配置的消息: " + path);
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 
     public String formatMessage(String path, ProxiedPlayer player, Object... replacements) {
@@ -196,17 +197,7 @@ public class BungeeChat extends Plugin {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
-    private void loadMessages() {
-        try {
-            File messagesFile = new File(getDataFolder(), "messages.yml");
-            if (!messagesFile.exists()) {
-                try (InputStream in = getResourceAsStream("messages.yml")) {
-                    Files.copy(in, messagesFile.toPath());
-                }
-            }
-            messagesConfig = ConfigurationProvider.getProvider(YamlConfiguration.class).load(messagesFile);
-        } catch (IOException e) {
-            getLogger().severe("无法加载 messages.yml: " + e.getMessage());
-        }
+    public void reloadConfigs() {
+        configManager.reloadConfigs();
     }
 }

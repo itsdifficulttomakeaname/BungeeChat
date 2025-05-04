@@ -16,6 +16,8 @@ public class MuteCommand extends Command {
         this.plugin = plugin;
     }
 
+
+
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 3) {

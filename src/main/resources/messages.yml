@@ -44,8 +44,7 @@ NoPermissionWarning:
   "prefixes.disable": "&c❌ 你没有禁用称号的权限！"
 
 AntiSpam:
-  warnmessage: "§c⚠️ 警告！请降低发言频率，否则将被禁言 {time}"
+  warnmessage: "§6⚠ 警告！请降低发言频率，否则将被禁言 {time}"
 
 AntiSwear:
-  warnmessage: "&6⚠️ 请勿发送违规内容！这是第 {count} 次警告，多次违反将禁言 {time} ！"
-  banmessage: "&c❌ 你因发送违规内容被禁言 {time}"
+  warnmessage: "&6⚠ 请勿发送违规内容！这是第 {count} 次警告，多次违反将禁言 {time} ！"

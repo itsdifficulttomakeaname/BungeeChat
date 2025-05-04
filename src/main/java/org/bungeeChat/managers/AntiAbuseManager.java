@@ -22,7 +22,7 @@ public class AntiAbuseManager {
 
     public boolean handleAntiSwear(ProxiedPlayer player, String message) {
         Configuration config = plugin.getConfigManager().getConfig();
-        Configuration messages = plugin.getMessagesConfig(); // 使用正确的方法
+        String messages = plugin.getMessage("AntiSwear.warnmessage");
 
         boolean hasViolation = antiMessagePattern.matcher(message).find();
         if (hasViolation) {
@@ -30,9 +30,10 @@ public class AntiAbuseManager {
                 int count = incrementViolationCount(player.getUniqueId());
                 String count_number = String.valueOf(count);
 
-                String warnMessage = messages.getString("AntiSwear.warnmessage", "§6请勿发送违规内容！这是第{count}次警告")
+                String warnMessage = messages
                         .replace("{count}", count_number)
                         .replace("{PLayer}", player.getName())
+                        .replace("{time}", formatDuration(config.getInt("AntiSwear.time", 600)))
                         .replace("&", "§");
                 player.sendMessage(warnMessage);
 
@@ -86,7 +87,7 @@ public class AntiAbuseManager {
 
         // 处理达到警告阈值而没有超过禁言阈值的玩家（没有bypass权限）
         if (msgCount <= banThreshold){
-            String warnMessage = plugin.getMessagesConfig().getString("AntiSpam.warnmessage", "§6请勿发送违规内容！这是第 {count} 次警告")
+            String warnMessage = plugin.getMessage("AntiSpam.warnmessage")
                     .replace("{count}", String.valueOf(msgCount))
                     .replace("{time}", formatDuration(duration))
                     .replace("&", "§");
