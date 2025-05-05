@@ -53,7 +53,9 @@ public class PrefixManager {
         if (!player.hasPermission(prefixes.get(prefixKey).permission())) return;
 
         activePrefixes.put(player.getName(), prefixKey);
-        player.sendMessage(new TextComponent(ChatColor.GREEN + "已启用称号: " + prefixKey));
+        String enableInfo = plugin.getMessage("prefix.enable-success")
+                .replace("{prefix}", prefixKey);
+        player.sendMessage("\n§6[" + plugin.getConfigManager().getConfig().getString("Server-Prefix") + "]§r " + enableInfo + "\n");
 
         // 保存数据
         plugin.getPlayerDataManager().savePlayerData(player.getName(), prefixKey);
@@ -67,7 +69,8 @@ public class PrefixManager {
 
     public void disablePrefix(ProxiedPlayer player) {
         activePrefixes.remove(player.getName());
-        player.sendMessage(new TextComponent(ChatColor.GREEN + "已禁用称号！"));
+        String disableInfo = plugin.getMessage("prefix.disable-success");
+        player.sendMessage("\n§6[" + plugin.getConfigManager().getConfig().getString("Server-Prefix") + "]§r " + disableInfo + "\n");
 
         // 保存数据
         plugin.getPlayerDataManager().savePlayerData(player.getName(), null);

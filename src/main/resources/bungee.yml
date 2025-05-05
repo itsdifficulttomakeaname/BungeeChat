@@ -3,7 +3,7 @@ version: '${version}'
 main: org.bungeeChat.BungeeChat
 authors:
   Jason31416
-  janhous
+  Janhous
   DeepSeek (R1)
 permissions:
   # 聊天功能

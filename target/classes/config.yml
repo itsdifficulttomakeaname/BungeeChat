@@ -76,6 +76,9 @@ Prefixes:
       1:
         prefix1: # 这里可以随便写啥 只要不重复 其余同理 {prefix}将会显示此项
           name: "称号1"
+           # 理论上支持如下颜色 "black", "dark_blue", "dark_green", "dark_aqua"
+          # "dark_red","dark_purple", "gold", "gray", "dark_gray", "blue"
+          # "green","aqua", "red", "light_purple", "yellow", "white"
           color: "red"
         prefix2:
           name: "称号2"

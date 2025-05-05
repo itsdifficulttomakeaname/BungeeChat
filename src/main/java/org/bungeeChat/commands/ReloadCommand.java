@@ -17,6 +17,6 @@ public class ReloadCommand extends Command {
     public void execute(CommandSender sender, String[] args) {
         plugin.getConfigManager().reloadConfigs();
         plugin.getChatManager().reloadAntiMessagePattern();
-        sender.sendMessage(new TextComponent("§aBungeeChat 配置已重载！"));
+        sender.sendMessage(new TextComponent("§a[BungeeChat] 配置已重载！"));
     }
 }

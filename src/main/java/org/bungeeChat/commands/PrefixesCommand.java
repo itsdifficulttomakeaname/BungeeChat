@@ -77,6 +77,8 @@ public class PrefixesCommand extends Command {
                 }
             }
         }
+        TextComponent footer = new TextComponent(ChatColor.GOLD + "================" + serverPrefix + "================");
+        player.sendMessage(footer);
     }
 
     private TextComponent createButton(String text, String command, ChatColor color) {
