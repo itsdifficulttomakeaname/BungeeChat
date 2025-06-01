@@ -9,6 +9,7 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import org.bungeeChat.BungeeChat;
 import org.bungeeChat.managers.PrefixManager.Prefix;
+import org.bungeeChat.handlers.CopyHandler;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -23,9 +24,11 @@ public class ChatManager implements Listener {
     private Pattern antiMessagePattern;
     private final SimpleDateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final List<ChatMessage> messageHistory = Collections.synchronizedList(new ArrayList<>());
+    private final CopyHandler copyHandler;
 
     public ChatManager(BungeeChat plugin) {
         this.plugin = plugin;
+        this.copyHandler = new CopyHandler(plugin);
         compileAntiMessagePattern();
     }
 
@@ -292,7 +295,7 @@ public class ChatManager implements Listener {
         // 两个空格作为间隔
         TextComponent buttons = new TextComponent("  ");
 
-        // 引用按钮（保持不变）
+        // 引用按钮
         UUID id = UUID.randomUUID();
         PlayerDataManager.messageHistory.put(id, new PlayerDataManager.Message(player.getName(), message));
 
@@ -308,6 +311,9 @@ public class ChatManager implements Listener {
         ));
 
         buttons.addExtra(quoteButton);
+
+        // 添加复制按钮
+        copyHandler.addCopyButton(mainMessage, player, message);
 
         // 将按钮附加到主消息
         mainMessage.addExtra(buttons);

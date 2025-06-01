@@ -8,6 +8,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bungeeChat.commands.*;
+import org.bungeeChat.handlers.QuoteHandler;
 import org.bungeeChat.listeners.PlayerLoginListener;
 import org.bungeeChat.managers.*;
 
